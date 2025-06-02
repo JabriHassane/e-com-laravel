@@ -1,0 +1,121 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: laravel_app
+    # Remove volume mount to avoid Windows file system issues
+    volumes:
+      - .:/var/www:delegated
+      - /var/www/vendor
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      - APP_ENV=${APP_ENV:-local}
+      - APP_DEBUG=${APP_DEBUG:-true}
+    networks:
+      - laravel-network
+    healthcheck:
+      test: ["CMD", "php-fpm", "-t"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  web:
+    image: nginx:latest
+    container_name: laravel_web
+    ports:
+      - "${NGINX_PORT:-8000}:80"
+    volumes:
+      - .:/var/www:delegated
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - app
+    networks:
+      - laravel-network
+    healthcheck:
+      test: ["CMD", "nginx", "-t"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  db:
+    image: postgres:15
+    container_name: laravel_db
+    environment:
+      POSTGRES_DB: ${DB_DATABASE:-laradb}
+      POSTGRES_USER: ${DB_USERNAME:-larauser}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-larapass}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - laravel-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USERNAME:-larauser}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  adminer:
+    image: adminer:latest
+    container_name: laravel_adminer
+    ports:
+      - "${ADMINER_PORT:-8080}:8080"
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - laravel-network
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: laravel_pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@example.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    depends_on:
+      - db
+    networks:
+      - laravel-network
+    restart: unless-stopped
+volumes:
+  pgdata:
+
+networks:
+  laravel-network:
+    driver: bridge
