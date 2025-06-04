@@ -29,9 +29,7 @@ class Product extends Model
     public function categories(): BelongsToMany
     {
         return $this->belongsToMany(Category::class)
-                    ->using(CategoryProduct::class)
-                    ->withPivot(['is_primary', 'sort_order'])
-                    ->withTimestamps();
+                    ->using(CategoryProduct::class);
     }
 
     public function cartItems()

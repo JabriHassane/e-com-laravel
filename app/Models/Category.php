@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Category extends Model
 {
@@ -25,12 +26,42 @@ class Category extends Model
         'is_active' => 'boolean'
     ];
 
+    /**
+     * Auto-generate slug on create/update
+     */
+    protected static function booted()
+    {
+        static::creating(function ($category) {
+            if (empty($category->slug)) {
+                $category->slug = Str::slug($category->name);
+            }
+        });
+
+        static::updating(function ($category) {
+            $category->slug = Str::slug($category->name);
+        });
+    }
+
+    /**
+     * Accessor for full image URL
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        return $this->image ? asset('storage/' . $this->image) : null;
+    }
+
+    /**
+     * Scope for active categories
+     */
+    public function scopeActive($query)
+    {
+        return $query->where('is_active', true);
+    }
+
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class)
-                ->using(CategoryProduct::class)
-                ->withPivot(['is_primary', 'sort_order'])
-                ->withTimestamps();
+                ->using(CategoryProduct::class);
     }
 
     public function parent(): BelongsTo

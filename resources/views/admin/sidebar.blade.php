@@ -9,11 +9,16 @@
         </div>
         <!-- Sidebar Navidation Menus--><span class="heading">Main</span>
         <ul class="list-unstyled">
-                <li class="active">
-                  <a href="index.html"> <i class="icon-home"></i>Home </a>
+                <li class="{{ request()->is('admin/dashboard') ? 'active' : '' }}">
+                  <a href="{{ url('admin/dashboard') }}"><i class="icon-home"></i>Home</a>
                 </li>
-                <li>
-                  <a href="{{url('categories')}}"> <i class="icon-grid"></i>Categories </a>
+
+                <li class="{{ request()->is('admin/categories*') ? 'active' : '' }}">
+                  <a href="{{ url('admin/categories') }}"><i class="icon-grid"></i>Categories</a>
+                </li>
+
+                <li class="{{ request()->is('admin/products*') ? 'active' : '' }}">
+                  <a href="{{ url('admin/products') }}"><i class="icon-cloud"></i>products</a>
                 </li>
                 
                 <li><a href="#exampledropdownDropdown" aria-expanded="false" data-toggle="collapse"> <i class="icon-windows"></i>Example dropdown </a>
@@ -23,11 +28,11 @@
                     <li><a href="#">Page</a></li>
                   </ul>
                 </li>
-                <li><a href="login.html"> <i class="icon-logout"></i>Login page </a></li>
-        </ul><span class="heading">Extras</span>
+                
+        {{-- </ul><span class="heading">Extras</span>
         <ul class="list-unstyled">
           <li> <a href="#"> <i class="icon-settings"></i>Demo </a></li>
           <li> <a href="#"> <i class="icon-writing-whiteboard"></i>Demo </a></li>
           <li> <a href="#"> <i class="icon-chart"></i>Demo </a></li>
-        </ul>
+        </ul> --}}
       </nav>

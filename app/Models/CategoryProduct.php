@@ -20,29 +20,8 @@ class CategoryProduct extends Pivot
      */
     protected $fillable = [
         'category_id',
-        'product_id',
-        
-        'is_primary',
-        'sort_order'
+        'product_id'
     ];
 
-    /**
-     * The attributes that should be cast.
-     *
-     * @var array
-     */
-    protected $casts = [
-        'is_primary' => 'boolean',
-        'sort_order' => 'integer'
-    ];
 
-    /**
-     * Default attribute values
-     * 
-     * @var array
-     */
-    protected $attributes = [
-        'is_primary' => false,
-        'sort_order' => 0
-    ];
 }
