@@ -35,11 +35,7 @@
             <li class="breadcrumb-item active">Products</li>
           </ul>
         </div>
-        @if (session('success'))
-            <div class="alert alert-success alert-dismissible fade show" role="alert">
-                {{ session('success') }}
-            </div>
-        @endif
+        
         {{-- error in the csv files --}}
         @if ($errors->any())
             <div class="alert alert-danger">

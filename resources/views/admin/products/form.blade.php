@@ -32,21 +32,21 @@
         <!-- body content  -->    
           <ul class="breadcrumb">
             <li class="breadcrumb-item"><a href="{{ url('admin/dashboard') }}">Home</a></li>
-            <li class="breadcrumb-item active">Categories</li>
+            <li class="breadcrumb-item active">Products</li>
           </ul>
         </div>
         <div class="col-lg-6">
             <div class="block">
                 <div class="title">
-                    <strong class="d-block">{{ isset($category) ? 'Edit Category' : 'Create New Category' }}</strong>
-                    <span class="d-block">Manage your product categories</span>
+                    <strong class="d-block">{{ isset($category) ? 'Edit Prodct' : 'Create New Prodct' }}</strong>
+                    <span class="d-block">Manage your product products</span>
                 </div>
                 <div class="block-body">
                     <form class="form-horizontal" method="POST" 
-                        action="{{ isset($category) ? route('categories.update', $category->id) : route('categories.store') }}"
+                        action="{{ isset($product) ? route('products.update', $product->id) : route('products.store') }}"
                         enctype="multipart/form-data">
                         @csrf
-                        @if(isset($category))
+                        @if(isset($product))
                             @method('PUT')
                         @endif
 
@@ -54,43 +54,67 @@
                         <div class="form-group row">
                             <label class="col-sm-3 form-control-label">Name</label>
                             <div class="col-sm-9">
-                                <input type="text" name="name" 
-                                    value="{{ old('name', $category->name ?? '') }}" 
-                                    class="form-control @error('name') is-invalid @enderror" 
-                                    placeholder="Category Name" required>
+                                <input type="text" name="name"
+                                    value="{{ old('name', $product->name ?? '') }}"
+                                    class="form-control @error('name') is-invalid @enderror"
+                                    required>
                                 @error('name')
                                     <small class="form-text text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
                         </div>
 
-                        <!-- Parent Category Select -->
+                        <!-- Categories Multi-Select -->
+                        
                         <div class="form-group row">
-                            <label class="col-sm-3 form-control-label">Parent Category</label>
+                            <label class="col-sm-3 form-control-label">Categories</label>
                             <div class="col-sm-9">
-                                <select name="parent_id" class="form-control">
-                                    <option value="">-- No Parent --</option>
-                                    @foreach($categories as $cat)
-                                        @if(!isset($category) || $cat->id != $category->id)
-                                            <option value="{{ $cat->id }}" 
-                                                {{ (old('parent_id', $category->parent_id ?? '') == $cat->id) ? 'selected' : '' }}>
-                                                {{ $cat->name }}
-                                            </option>
-                                        @endif
+                                <select name="categories[]" class="form-control" multiple>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}"
+                                            {{ (isset($product) && $product->categories->contains($category->id)) || collect(old('categories'))->contains($category->id) ? 'selected' : '' }}>
+                                            {{ $category->name }}
+                                        </option>
                                     @endforeach
                                 </select>
-                                @error('parent_id')
+                                @error('categories')
                                     <small class="form-text text-danger">{{ $message }}</small>
                                 @enderror
                             </div>
                         </div>
 
-                        <!-- Description Field -->
+                        <!-- Description -->
                         <div class="form-group row">
                             <label class="col-sm-3 form-control-label">Description</label>
                             <div class="col-sm-9">
-                                <textarea name="description" class="form-control" 
-                                        placeholder="Category Description">{{ old('description', $category->description ?? '') }}</textarea>
+                                <textarea name="description" class="form-control">{{ old('description', $product->description ?? '') }}</textarea>
+                            </div>
+                        </div>
+
+                        <!-- Price -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 form-control-label">Price</label>
+                            <div class="col-sm-9">
+                                <input type="number" step="0.01" name="price" class="form-control"
+                                    value="{{ old('price', $product->price ?? '') }}" required>
+                            </div>
+                        </div>
+
+                        <!-- SKU -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 form-control-label">SKU</label>
+                            <div class="col-sm-9">
+                                <input type="text" name="sku" class="form-control"
+                                    value="{{ old('sku', $product->sku ?? '') }}">
+                            </div>
+                        </div>
+
+                        <!-- Stock Quantity -->
+                        <div class="form-group row">
+                            <label class="col-sm-3 form-control-label">Stock Quantity</label>
+                            <div class="col-sm-9">
+                                <input type="number" name="stock_quantity" class="form-control"
+                                    value="{{ old('stock_quantity', $product->stock_quantity ?? '') }}">
                             </div>
                         </div>
 
@@ -98,15 +122,10 @@
                         <div class="form-group row">
                             <label class="col-sm-3 form-control-label">Image</label>
                             <div class="col-sm-9">
-                                <div class="form-group">
-                                    <div class="input-group">
-                                        <div class="input-group-prepend"><span class="input-group-text">@</span></div>
-                                        <input type="file" name="image" class="form-control">
-                                    </div>
-                                </div>
-                                @if(isset($category) && $category->image)
+                                <input type="file" name="image" class="form-control">
+                                @if(isset($product) && $product->image)
                                     <div class="mt-2">
-                                        <img src="{{ asset('storage/' . $category->image) }}" width="100">
+                                        <img src="{{ asset('storage/' . $product->image) }}" width="100">
                                         <label class="d-block mt-2">
                                             <input type="checkbox" name="remove_image"> Remove current image
                                         </label>
@@ -115,34 +134,28 @@
                             </div>
                         </div>
 
-                        <!-- Status Checkbox -->
+                        <!-- Status -->
                         <div class="form-group row">
                             <label class="col-sm-3 form-control-label">Status</label>
                             <div class="col-sm-9">
                                 <input type="hidden" name="is_active" value="0">
-
-                                <div class="checkbox">
-                                    <label>
-                                        <input type="checkbox" name="is_active" value="1"
-                                            {{ old('is_active', $category->is_active ?? true) ? 'checked' : '' }}>
-                                        Active
-                                    </label>
-                                </div>
+                                <input type="checkbox" name="is_active" value="1"
+                                    {{ old('is_active', $product->is_active ?? true) ? 'checked' : '' }}>
+                                Active
                             </div>
                         </div>
 
-                        <!-- Submit Button -->
-                        <div class="form-group row">       
+                        <!-- Submit -->
+                        <div class="form-group row">
                             <div class="col-sm-9 offset-sm-3">
                                 <button type="submit" class="btn btn-primary">
-                                    {{ isset($category) ? 'Update' : 'Create' }} Category
+                                    {{ isset($product) ? 'Update' : 'Create' }} Product
                                 </button>
-                                <a href="{{ route('categories.index') }}" class="btn btn-secondary ml-2">
-                                    Cancel
-                                </a>
+                                <a href="{{ route('products.index') }}" class="btn btn-secondary ml-2">Cancel</a>
                             </div>
                         </div>
                     </form>
+
                 </div>
             </div>
         </div>

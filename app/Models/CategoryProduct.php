@@ -23,5 +23,4 @@ class CategoryProduct extends Pivot
         'product_id'
     ];
 
-
 }
